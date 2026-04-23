@@ -240,6 +240,300 @@ Open: http://localhost:5173
 
 ---
 
+## Backend Architecture (Complete Overview)
+
+The backend follows a **scalable MVC + Service Layer architecture** designed for real-world SaaS applications.
+
+---
+
+## Backend Folder Structure
+
+```bash
+backend/
+├── src/
+│
+│   ├── config/
+│   │   ├── db.js
+│   │   └── env.js
+│
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── project.controller.js
+│   │   ├── payment.controller.js
+│   │   └── dispute.controller.js
+│
+│   ├── models/
+│   │   ├── User.model.js
+│   │   ├── Project.model.js
+│   │   ├── Milestone.model.js
+│   │   ├── Payment.model.js
+│   │   └── Dispute.model.js
+│
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── project.routes.js
+│   │   ├── payment.routes.js
+│   │   └── dispute.routes.js
+│
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── validate.middleware.js
+│
+│   ├── services/
+│   │   ├── auth.service.js
+│   │   ├── project.service.js
+│   │   ├── payment.service.js
+│   │   └── dispute.service.js
+│
+│   ├── utils/
+│   │   ├── generateToken.js
+│   │   ├── responseHandler.js
+│   │   └── constants.js
+│
+│   ├── validations/
+│   │   ├── auth.validation.js
+│   │   ├── project.validation.js
+│   │   └── payment.validation.js
+│
+│   ├── app.js
+│   └── server.js
+│
+├── .env
+├── package.json
+└── README.md
+```
+
+---
+
+## File Explanation (What Each File Does)
+
+### config/
+
+* **db.js**
+
+  * Connects backend to MongoDB
+  * Handles connection errors
+
+* **env.js**
+
+  * Loads environment variables
+  * Stores secrets (JWT, DB URL)
+
+---
+
+### controllers/ (Request Handling Layer)
+
+* **auth.controller.js**
+
+  * Login, register, logout APIs
+
+* **project.controller.js**
+
+  * Create project
+  * Get project list
+  * Update project status
+
+* **payment.controller.js**
+
+  * Lock funds (escrow)
+  * Release payment
+
+* **dispute.controller.js**
+
+  * Create and manage disputes
+
+👉 Role: Handles request & sends response
+
+---
+
+### models/ (Database Layer)
+
+* **User.model.js**
+
+  * Stores user (client/freelancer)
+
+* **Project.model.js**
+
+  * Project info (title, status, deadline)
+
+* **Milestone.model.js**
+
+  * Tracks project steps & payments
+
+* **Payment.model.js**
+
+  * Stores escrow transaction data
+
+* **Dispute.model.js**
+
+  * Stores conflict details and proof
+
+👉 Role: Defines database structure
+
+---
+
+### routes/ (API Layer)
+
+* **auth.routes.js**
+
+  * /login, /register
+
+* **project.routes.js**
+
+  * /projects APIs
+
+* **payment.routes.js**
+
+  * Payment APIs
+
+* **dispute.routes.js**
+
+  * Dispute APIs
+
+👉 Role: Connect URL → controller
+
+---
+
+### middlewares/ (Security & Control)
+
+* **auth.middleware.js**
+
+  * JWT authentication
+  * Protects private routes
+
+* **error.middleware.js**
+
+  * Global error handling
+
+* **validate.middleware.js**
+
+  * Validates request data
+
+👉 Role: Filters request before controller
+
+---
+
+### services/ (Business Logic Layer)
+
+* **auth.service.js**
+
+  * Token generation
+  * Password validation
+
+* **project.service.js**
+
+  * Project creation logic
+  * Milestone handling
+
+* **payment.service.js**
+
+  * Escrow logic (lock/release funds)
+
+* **dispute.service.js**
+
+  * Dispute resolution logic
+
+👉 Role: Core logic (important layer)
+
+---
+
+### utils/ (Helper Functions)
+
+* **generateToken.js**
+
+  * Creates JWT token
+
+* **responseHandler.js**
+
+  * Standard API responses
+
+* **constants.js**
+
+  * Status values, roles, enums
+
+---
+
+### validations/
+
+* **auth.validation.js**
+
+  * Login/register validation
+
+* **project.validation.js**
+
+  * Project form validation
+
+* **payment.validation.js**
+
+  * Payment validation
+
+👉 Role: Prevent invalid data
+
+---
+
+### Root Files
+
+* **app.js**
+
+  * Setup express app
+  * Middleware + routes
+
+* **server.js**
+
+  * Start server
+  * Connect database
+
+---
+
+## Backend Flow
+
+```plaintext
+Request → Route → Controller → Service → Model → Database → Response
+```
+
+---
+
+## Features Implemented in Backend
+
+### Core Features
+
+* User authentication (JWT based)
+* Project creation & management
+* Milestone-based workflow
+* Escrow payment system
+* Dispute handling system
+
+---
+
+### Advanced Features
+
+* Secure API with middleware
+* Structured error handling
+* Input validation system
+* Scalable architecture design
+
+---
+
+### Optional Integrations (Future Ready)
+
+* Cloudinary (file uploads)
+* Google OAuth (login)
+* Firebase (notifications)
+* Email system (alerts)
+* AI integration (OpenAI)
+
+---
+
+## Why This Backend is Strong
+
+* Follows industry-standard architecture
+* Clean separation of concerns
+* Easy to scale and maintain
+* Supports real-world SaaS features
+* Ready for production-level upgrades
+
+
 ## Summary
 
 EscrowFlow converts freelancing into a structured and secure system with escrow-based payments.
