@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, FolderKanban } from "lucide-react";
-import ProjectRow from "./ProjectRow";
+import ProjectRow from "./ProjectRow.jsx";
 
 const Projects = () => {
   const { projects } = useSelector((state) => state.projects);

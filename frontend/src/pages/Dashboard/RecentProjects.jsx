@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 const badgeStyles = {
   Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   Pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -5,6 +6,7 @@ const badgeStyles = {
 };
 
 const RecentProjects = ({ projects = [] }) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -22,7 +24,7 @@ const RecentProjects = ({ projects = [] }) => {
               projects.slice(0, 5).map((project) => (
                 <tr 
                   key={project.id} 
-                  onClick={() => alert(`Project: ${project.name}`)}
+                  onClick={() => navigate(`/workspace/${project.id}`)}
                   className="group hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <td className="px-6 py-4">
@@ -42,7 +44,7 @@ const RecentProjects = ({ projects = [] }) => {
                     {project.category}
                   </td>
                   <td className="px-6 py-4 text-[15px] font-extrabold text-gray-900 text-right">
-                    {project.amount}
+                    ${project.totalAmount || 0}
                   </td>
                 </tr>
               ))

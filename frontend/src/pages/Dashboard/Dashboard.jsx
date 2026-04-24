@@ -1,16 +1,16 @@
 import { useSelector } from "react-redux";
 import { Plus, LayoutGrid, FolderKanban, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import StatsCard from "./Dashboard/StatsCard";
-import RecentProjects from "./Dashboard/RecentProjects";
+import StatsCard from "./StatsCard.jsx";
+import RecentProjects from "./RecentProjects.jsx";
 
 const Dashboard = () => {
   const { projects } = useSelector((state) => state.projects);
 
   const stats = {
-    total: projects.length,
-    active: projects.filter(p => p.status === "Active").length,
-    pending: projects.filter(p => p.status === "Pending").length,
-    completed: projects.filter(p => p.status === "Completed").length,
+    total: projects?.length || 0,
+    active: projects?.filter(p => p.status === "Active").length || 0,
+    pending: projects?.filter(p => p.status === "Pending").length || 0,
+    completed: projects?.filter(p => p.status === "Completed").length || 0,
   };
 
   return (
@@ -32,15 +32,15 @@ const Dashboard = () => {
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">System Metrics</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <StatsCard title="Total Projects" value={stats.total} icon={FolderKanban} color="bg-indigo-500" />
-          <StatsCard title="Active Work" value={stats.active} icon={Clock} color="bg-emerald-500" />
-          <StatsCard title="Pending" value={stats.pending} icon={AlertCircle} color="bg-orange-500" />
-          <StatsCard title="Completed" value={stats.completed} icon={CheckCircle} color="bg-purple-500" />
+          <StatsCard title="Total Projects" value={stats.total} icon={FolderKanban} />
+          <StatsCard title="Active Work" value={stats.active} icon={Clock} />
+          <StatsCard title="Pending" value={stats.pending} icon={AlertCircle} />
+          <StatsCard title="Completed" value={stats.completed} icon={CheckCircle} />
         </div>
       </section>
 
       <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-        <RecentProjects projects={projects.slice(0, 5)} />
+        <RecentProjects projects={projects?.slice(0, 5) || []} />
       </div>
     </div>
   );
