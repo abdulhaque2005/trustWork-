@@ -1,75 +1,172 @@
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { CreditCard, Wallet, ArrowUpRight, ShieldCheck, History, ArrowDown } from "lucide-react";
 import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import { Wallet, Lock, CheckCircle2, ArrowUpRight, History } from "lucide-react";
-import PaymentCard from "./PaymentCard";
-import PaymentSummary from "./PaymentSummary";
 
 const Payments = () => {
-  const { payments } = useSelector((state) => state.projects);
+  const { projects } = useSelector((state) => state.projects);
+  const { user } = useSelector((state) => state.auth);
+  const role = localStorage.getItem("role") || user?.role || "Client";
 
-  const totals = {
-    earnings: payments.filter(p => p.status === "Completed").reduce((acc, p) => acc + p.amount, 0),
-    locked: payments.filter(p => p.status === "Locked").reduce((acc, p) => acc + p.amount, 0),
-    released: payments.filter(p => p.status === "Completed").reduce((acc, p) => acc + p.amount, 0),
+  // Simulate stats
+  const stats = {
+    totalLocked: projects.reduce((acc, p) => acc + p.milestones.filter(m => m.status === 'Locked').reduce((sum, m) => sum + m.amount, 0), 0),
+    totalReleased: projects.reduce((acc, p) => acc + p.milestones.filter(m => m.status === 'Released').reduce((sum, m) => sum + m.amount, 0), 0),
+    pendingApproval: projects.reduce((acc, p) => acc + p.milestones.filter(m => m.status === 'Pending').reduce((sum, m) => sum + m.amount, 0), 0),
   };
 
-  const handleWithdraw = () => {
-    toast.success("Real withdrawal logic requires connected wallet", {
-      style: { borderRadius: '16px', background: '#1F2937', color: '#fff' }
+  // Compile transaction list from projects
+  const transactions = [];
+  projects.forEach(p => {
+    p.milestones.forEach((m, idx) => {
+      transactions.push({
+        id: `TX-${p.id}-${idx}`,
+        project: p.name,
+        desc: m.title,
+        amount: m.amount,
+        date: m.deadline,
+        status: m.status // Locked, Pending, Released, Disputed
+      });
+    });
+  });
+
+  const handleWithdraw = (amount) => {
+    toast.success(`Successfully withdrew $${amount}! 💸`, {
+      style: {
+        borderRadius: "16px",
+        background: "var(--bg-main)",
+        color: "var(--text-main)",
+        border: "1px solid var(--border-color)",
+        fontWeight: "700",
+      },
     });
   };
 
+  const cardStyle = { backgroundColor: "var(--bg-main)", border: "1px solid var(--border-color)" };
+  const softBg = { backgroundColor: "var(--bg-soft)", border: "1px solid var(--border-color)" };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-10 pb-24 animate-in fade-in duration-700">
+    <div className="max-w-7xl mx-auto space-y-10 pb-20 animate-in fade-in duration-700">
       <Toaster position="top-right" />
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-        <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Escrow Ledger</h1>
-          <p className="text-gray-500 font-bold mt-1.5 flex items-center gap-2">
-            <span className="w-2 h-2 bg-[#6C5CE7] rounded-full animate-pulse" />
-            Verified transactions from your active projects.
-          </p>
+      {/* HEADER SECTION */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-8 rounded-[32px] shadow-sm flex flex-col md:flex-row justify-between items-center gap-6" style={cardStyle}>
+        <div className="space-y-1 text-center md:text-left">
+          <h1 className="text-4xl font-black tracking-tight" style={{ color: "var(--text-main)" }}>Financial Ledger</h1>
+          <p className="font-bold" style={{ color: "var(--text-muted)" }}>Manage your escrow balances and transaction history.</p>
         </div>
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleWithdraw}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-[#6C5CE7] text-white font-black rounded-2xl shadow-xl transition-all"
-        >
-          <Wallet size={20} /> Withdraw Earnings
-        </motion.button>
-      </div>
-
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-          <div className="p-2 bg-indigo-50 rounded-xl">
-            <History size={22} className="text-[#6C5CE7]" />
+        <div className="flex gap-4">
+          <div className="p-4 rounded-2xl" style={softBg}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>Current Role</p>
+            <p className="text-lg font-black uppercase" style={{ color: "var(--accent)" }}>{role}</p>
           </div>
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Escrow Summary</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <PaymentSummary title="Total Earnings" value={`$${totals.earnings}`} icon={CheckCircle2} color="bg-indigo-500" />
-          <PaymentSummary title="Locked in Escrow" value={`$${totals.locked}`} icon={Lock} color="bg-orange-500" />
-          <PaymentSummary title="Released" value={`$${totals.released}`} icon={ArrowUpRight} color="bg-emerald-500" />
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="text-2xl font-black text-gray-900 tracking-tight px-2">Transaction History</h2>
-        <div className="space-y-5">
-          {payments.length > 0 ? (
-            payments.map((payment, index) => (
-              <PaymentCard key={payment.id} payment={{...payment, projectName: "Project Transaction"}} index={index} />
-            ))
-          ) : (
-            <div className="py-20 text-center bg-white rounded-[40px] border border-gray-100 italic font-bold text-gray-400">
-              No transactions recorded in the system ledger.
-            </div>
+          {role === "Client" && (
+            <button className="px-8 py-4 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-all" style={{ backgroundColor: "var(--accent)" }}>
+              Deposit Funds
+            </button>
           )}
         </div>
-      </section>
+      </motion.div>
+
+      {/* STATS SECTION */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="p-8 rounded-[32px] space-y-4" style={cardStyle}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: "var(--bg-soft)", color: "var(--accent)", border: "1px solid var(--border-color)" }}>
+            <Wallet size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>Total Locked (Escrow) 🔒</p>
+            <p className="text-3xl font-black" style={{ color: "var(--text-main)" }}>${stats.totalLocked.toLocaleString()}</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="p-8 rounded-[32px] space-y-4" style={cardStyle}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10B981" }}>
+            <ArrowUpRight size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>{role === "Client" ? "Total Released 💰" : "Total Earned 💰"}</p>
+            <p className="text-3xl font-black" style={{ color: "var(--text-main)" }}>${stats.totalReleased.toLocaleString()}</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="p-8 rounded-[32px] space-y-4" style={cardStyle}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", color: "#F59E0B" }}>
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>Pending Approval ⏳</p>
+            <p className="text-3xl font-black" style={{ color: "var(--text-main)" }}>${stats.pendingApproval.toLocaleString()}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* TRANSACTIONS SECTION */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="p-8 rounded-[32px] shadow-sm space-y-8" style={cardStyle}>
+        <h3 className="text-2xl font-black flex items-center gap-3" style={{ color: "var(--text-main)" }}>
+          <History size={26} style={{ color: "var(--accent)" }} /> Transaction History
+        </h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-[12px] font-black uppercase tracking-widest border-b" style={{ color: "var(--text-muted)", borderColor: "var(--border-color)" }}>
+                <th className="pb-6">ID</th>
+                <th className="pb-6">Project & Milestone</th>
+                <th className="pb-6">Deadline</th>
+                <th className="pb-6">Status</th>
+                <th className="pb-6 text-right">Amount</th>
+                {role === "Freelancer" && <th className="pb-6 text-right">Action</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y" style={{ divideColor: "var(--border-color)" }}>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center font-bold" style={{ color: "var(--text-muted)" }}>No transactions found.</td>
+                </tr>
+              ) : (
+                transactions.map((tx) => (
+                  <tr key={tx.id} className="group transition-all hover:bg-black/5 dark:hover:bg-white/5">
+                    <td className="py-6 px-2 font-black" style={{ color: "var(--text-muted)" }}>{tx.id}</td>
+                    <td className="py-6 px-2">
+                      <p className="font-bold" style={{ color: "var(--text-main)" }}>{tx.project}</p>
+                      <p className="text-[10px] font-black uppercase mt-1" style={{ color: "var(--text-muted)" }}>{tx.desc}</p>
+                    </td>
+                    <td className="py-6 px-2 text-sm font-bold" style={{ color: "var(--text-muted)" }}>{tx.date}</td>
+                    <td className="py-6 px-2">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border" style={{
+                        backgroundColor: tx.status === 'Released' ? 'rgba(16, 185, 129, 0.1)' : tx.status === 'Disputed' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        color: tx.status === 'Released' ? '#10B981' : tx.status === 'Disputed' ? '#EF4444' : '#F59E0B',
+                        borderColor: tx.status === 'Released' ? 'rgba(16, 185, 129, 0.2)' : tx.status === 'Disputed' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'
+                      }}>
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td className="py-6 px-2 text-right font-black" style={{ color: tx.status === 'Released' ? '#10B981' : 'var(--text-main)' }}>
+                      ${tx.amount.toLocaleString()}
+                    </td>
+                    {role === "Freelancer" && (
+                      <td className="py-6 px-2 text-right">
+                        {tx.status === "Released" ? (
+                          <button 
+                            onClick={() => handleWithdraw(tx.amount)}
+                            className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest text-white transition-all hover:opacity-90 active:scale-95"
+                            style={{ backgroundColor: "#10B981" }}
+                          >
+                            Withdraw
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-bold" style={{ color: "var(--text-muted)" }}>—</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   );
 };
