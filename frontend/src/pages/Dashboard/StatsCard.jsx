@@ -1,28 +1,41 @@
-const StatsCard = ({ title, value, icon: Icon, onClick, isActive }) => {
+import React from "react";
+import { motion } from "framer-motion";
+
+const StatsCard = ({ title, value, subtitle, icon: Icon, color, delay = 0 }) => {
   return (
-    <div 
-      onClick={onClick}
-      className={`group p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-sm
-        ${isActive 
-          ? 'bg-[#6C5CE7] border-[#6C5CE7] shadow-[#6C5CE7]/20 shadow-lg' 
-          : 'bg-white border-gray-100 hover:border-[#6C5CE7]/30 hover:shadow-md'}`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ scale: 1.04, transition: { duration: 0.2 } }}
+      className="relative overflow-hidden rounded-2xl p-6 cursor-pointer group transition-shadow duration-300 hover:shadow-lg"
+      style={{
+        backgroundColor: "var(--bg-main)",
+        border: "1px solid var(--border-color)",
+      }}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl transition-colors duration-300
-          ${isActive ? 'bg-white/20' : 'bg-indigo-50'}`}>
-          <Icon size={22} className={isActive ? 'text-white' : 'text-[#6C5CE7]'} />
+      {/* Background glow */}
+      <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full ${color} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`} />
+
+      <div className="flex items-start justify-between relative z-10">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+            {title}
+          </p>
+          <h3 className="text-2xl font-black tracking-tight" style={{ color: "var(--text-main)" }}>
+            {value}
+          </h3>
+          {subtitle && (
+            <p className="text-[11px] font-semibold mt-1" style={{ color: "var(--text-muted)", opacity: 0.7 }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+        <div className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center text-white shadow-lg`}>
+          <Icon size={20} strokeWidth={2.5} />
         </div>
       </div>
-      
-      <div>
-        <h3 className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isActive ? 'text-white' : 'text-gray-900'}`}>
-          {value}
-        </h3>
-        <p className={`text-[14px] font-semibold ${isActive ? 'text-indigo-100' : 'text-gray-500'}`}>
-          {title}
-        </p>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 
