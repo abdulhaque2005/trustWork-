@@ -14,8 +14,9 @@ A SaaS-based freelance platform that ensures secure payments and a structured wo
 
 View full UI flow here:
 
-https://www.figma.com/proto/7BwnU9bfaneGRB0np7fZWy/Abdul-Haque-s-team-library?node-id=3354-453&p=f&viewport=154%2C236%2C0.22&t=PGDWcmQ4FwmPUERs-1&scaling=contain&content-scaling=fixed&starting-point-node-id=3350%3A2&page-id=3339%3A2
-
+[https://www.figma.com/proto/7BwnU9bfaneGRB0np7fZWy/Abdul-Haque-s-team-library?node-id=3354-453&p=f&viewport=154%2C236%2C0.22&t=PGDWcmQ4FwmPUERs-1&scaling=contain&content-scaling=fixed&starting-point-node-id=3350%3A2&page-id=3339%3A2
+](https://www.figma.com/proto/89b3fyiWNX0WV9JNnUE6K2/Untitled?node-id=1-97&p=f&viewport=263%2C169%2C0.08&t=F2mceD7l7O7sE4w4-1&scaling=contain&content-scaling=fixed&page-id=0%3A1
+)
 ---
 
 ## Problem Analysis
