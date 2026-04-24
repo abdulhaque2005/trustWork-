@@ -5,63 +5,85 @@ const ProjectRow = ({ project }) => {
 
   const getDeadlineInfo = (project) => {
     if (project.status === "Completed") {
-      return { text: `Completed on Oct 20`, color: "text-emerald-600", bg: "bg-emerald-50" };
+      return { text: `Completed on Oct 20`, color: "#16a34a" };
     }
     const idNum = parseInt(project.id.replace(/\D/g, '')) || 0;
     const diff = (idNum % 7) - 2; 
-    if (diff === 0) return { text: "Due today", color: "text-amber-600", bg: "bg-amber-50" };
-    if (diff > 0) return { text: `Due in ${diff} days`, color: "text-blue-600", bg: "bg-blue-50" };
-    return { text: `Overdue by ${Math.abs(diff)} days ❗`, color: "text-rose-600", bg: "bg-rose-50" };
+    if (diff === 0) return { text: "Due today", color: "#d97706" };
+    if (diff > 0) return { text: `Due in ${diff} days`, color: "#2563eb" };
+    return { text: `Overdue by ${Math.abs(diff)} days ❗`, color: "#dc2626" };
   };
 
   const deadline = getDeadlineInfo(project);
 
+  const statusColors = {
+    Active: { bg: "#22C55E15", text: "#16a34a", border: "#22C55E30" },
+    Pending: { bg: "#F59E0B15", text: "#d97706", border: "#F59E0B30" },
+    Completed: { bg: "#6C5CE715", text: "#6C5CE7", border: "#6C5CE730" },
+    Disputed: { bg: "#EF444415", text: "#dc2626", border: "#EF444430" },
+  };
+  const sc = statusColors[project.status] || statusColors.Active;
+
   return (
     <div 
       onClick={() => navigate(`/workspace/${project.id}`)}
-      className="group flex flex-col md:flex-row md:items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl mb-4 hover:shadow-xl hover:border-[#6C5CE7]/30 transition-all duration-300 cursor-pointer animate-in slide-in-from-bottom-2"
+      className="group flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl mb-4 hover:shadow-xl transition-all duration-300 cursor-pointer"
+      style={{ backgroundColor: "var(--bg-main)", border: "1px solid var(--border-color)" }}
     >
       <div className="flex items-center gap-4 md:w-1/4">
-        <div className="w-11 h-11 rounded-xl bg-[#F8F9FC] border border-gray-100 flex items-center justify-center text-[#6C5CE7] font-extrabold text-[15px] group-hover:bg-[#6C5CE7] group-hover:text-white group-hover:shadow-[0_4px_12px_rgba(108,92,231,0.3)] transition-all">
-          {project.name.charAt(0)}
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center font-extrabold text-[15px] transition-all"
+          style={{ 
+            backgroundColor: "var(--bg-soft)", 
+            border: "1px solid var(--border-color)",
+            color: "var(--accent)"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "var(--accent)"; e.currentTarget.style.color = "white"; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "var(--bg-soft)"; e.currentTarget.style.color = "var(--accent)"; }}
+        >
+          {(project.name || "P").charAt(0)}
         </div>
         <div>
-          <p className="font-bold text-gray-900 group-hover:text-[#6C5CE7] transition-colors line-clamp-1">{project.name}</p>
-          <p className="text-[12px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 capitalize">{project.category}</p>
+          <p className="font-bold transition-colors line-clamp-1" 
+            style={{ color: "var(--text-main)" }}
+            onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+            onMouseLeave={e => e.currentTarget.style.color = "var(--text-main)"}
+          >{project.name}</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider mt-0.5 capitalize" style={{ color: "var(--text-muted)" }}>{project.category}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 md:w-1/4 mt-4 md:mt-0 px-2 lg:px-6">
-        <div className="flex items-center justify-between text-[11px] font-extrabold text-gray-500 uppercase tracking-widest">
+        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
           <span>Progress</span>
-          <span className="text-gray-900">{project.progress}%</span>
+          <span style={{ color: "var(--text-main)" }}>{project.progress}%</span>
         </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-color)" }}>
           <div 
-            className={`h-full transition-all duration-1000 ease-out ${project.status === 'Completed' ? 'bg-emerald-500' : 'bg-[#6C5CE7]'}`} 
-            style={{ width: `${project.progress}%` }}
+            className="h-full transition-all duration-1000 ease-out" 
+            style={{ width: `${project.progress}%`, backgroundColor: project.status === 'Completed' ? '#22C55E' : 'var(--accent)' }}
           />
         </div>
       </div>
 
       <div className="flex flex-wrap md:flex-nowrap items-center justify-between md:justify-end gap-6 md:w-2/5 mt-4 md:mt-0">
         <div className="text-right min-w-[120px]">
-          <p className="text-[16px] font-extrabold text-gray-900">${project.totalAmount || 0}</p>
-          <p className={`text-[12px] font-bold mt-0.5 ${deadline.color}`}>
-            {deadline.text}
-          </p>
+          <p className="text-[16px] font-extrabold" style={{ color: "var(--text-main)" }}>${project.totalAmount || 0}</p>
+          <p className="text-[12px] font-bold mt-0.5" style={{ color: deadline.color }}>{deadline.text}</p>
         </div>
 
         <div className="flex items-center gap-4">
-          <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border transition-all ${
-            project.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-            project.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-            'bg-indigo-50 text-indigo-700 border-indigo-100 shadow-sm shadow-indigo-100'
-          }`}>
+          <span className="px-4 py-1.5 rounded-full text-[12px] font-bold transition-all" style={{ backgroundColor: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>
             {project.status}
           </span>
           <button 
-            className="px-5 py-2.5 bg-gray-50 hover:bg-[#6C5CE7] hover:text-white text-[#6C5CE7] text-[13px] font-bold rounded-xl border border-gray-100 transition-all active:scale-95"
+            className="px-5 py-2.5 text-[13px] font-bold rounded-xl transition-all active:scale-95"
+            style={{ 
+              backgroundColor: "var(--bg-soft)", 
+              border: "1px solid var(--border-color)",
+              color: "var(--accent)"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = "var(--accent)"; e.currentTarget.style.color = "white"; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "var(--bg-soft)"; e.currentTarget.style.color = "var(--accent)"; }}
           >
             Workspace
           </button>

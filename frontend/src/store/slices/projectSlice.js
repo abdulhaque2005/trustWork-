@@ -15,69 +15,47 @@ const initialProjects = [
       { id: 'M2', title: "High-Fi Design", amount: 1000, status: "Locked", deadline: "Oct 25" },
     ],
     disputes: []
-  },
-  {
-    id: 'PRJ-3810',
-    name: "Mobile App MVP",
-    client: "Tech Start",
-    category: "Development",
-    totalAmount: 4500,
-    status: "Active",
-    progress: 30,
-    deadline: "Nov 15, 2026",
-    milestones: [
-      { id: 'M3', title: "Auth Module", amount: 1500, status: "Released", deadline: "Oct 15" },
-      { id: 'M4', title: "Core Features", amount: 3000, status: "Locked", deadline: "Nov 01" },
-    ],
-    disputes: []
-  },
-  {
-    id: 'PRJ-2755',
-    name: "SEO Campaign",
-    client: "Local Biz",
-    category: "Marketing",
-    totalAmount: 800,
-    status: "Completed",
-    progress: 100,
-    deadline: "Oct 20, 2026",
-    milestones: [
-      { id: 'M5', title: "Keyword Research", amount: 800, status: "Released", deadline: "Oct 18" },
-    ],
-    disputes: []
   }
-];
-
-const initialPayments = [
-  { id: 'TXN-101', projectId: 'PRJ-4921', projectName: "E-commerce Redesign", amount: 500, type: 'Milestone Release', status: 'Completed', date: 'Oct 12, 2026' },
-  { id: 'TXN-102', projectId: 'PRJ-4921', projectName: "E-commerce Redesign", amount: 1000, type: 'Escrow Lock', status: 'Locked', date: 'Oct 14, 2026' },
-  { id: 'TXN-103', projectId: 'PRJ-3810', projectName: "Mobile App MVP", amount: 1500, type: 'Milestone Release', status: 'Completed', date: 'Oct 16, 2026' },
-  { id: 'TXN-104', projectId: 'PRJ-3810', projectName: "Mobile App MVP", amount: 3000, type: 'Escrow Lock', status: 'Locked', date: 'Oct 18, 2026' },
 ];
 
 const initialState = {
   projects: JSON.parse(localStorage.getItem('projects')) || initialProjects,
-  payments: JSON.parse(localStorage.getItem('payments')) || initialPayments
+  payments: JSON.parse(localStorage.getItem('payments')) || [],
+  activities: JSON.parse(localStorage.getItem('activities')) || [
+    { id: 1, text: "System initialized", time: "Just now", type: "system" }
+  ],
+  searchQuery: ""
 };
 
 const projectSlice = createSlice({
   name: 'projects',
   initialState,
   reducers: {
+    setSearchQuery: (state, action) => {
+      state.searchQuery = action.payload;
+    },
     addProject: (state, action) => {
-      state.projects.push(action.payload);
+      const newProject = { ...action.payload, id: `PRJ-${Math.floor(1000 + Math.random() * 9000)}`, status: "Active", progress: 0, disputes: [] };
+      state.projects.unshift(newProject);
+      state.activities.unshift({ id: Date.now(), text: `New project created: ${newProject.name}`, time: "1m ago", type: "create" });
       localStorage.setItem('projects', JSON.stringify(state.projects));
+      localStorage.setItem('activities', JSON.stringify(state.activities));
     },
     releaseMilestone: (state, action) => {
       const { projectId, milestoneId } = action.payload;
       const project = state.projects.find(p => p.id === projectId);
       if (project) {
         const milestone = project.milestones.find(m => m.id === milestoneId);
-        if (milestone) milestone.status = "Released";
-        localStorage.setItem('projects', JSON.stringify(state.projects));
+        if (milestone && milestone.status !== "Released") {
+          milestone.status = "Released";
+          state.activities.unshift({ id: Date.now(), text: `Milestone released: ${milestone.title}`, time: "Just now", type: "payment" });
+          localStorage.setItem('projects', JSON.stringify(state.projects));
+          localStorage.setItem('activities', JSON.stringify(state.activities));
+        }
       }
     }
   },
 });
 
-export const { addProject, releaseMilestone } = projectSlice.actions;
+export const { addProject, releaseMilestone, setSearchQuery } = projectSlice.actions;
 export default projectSlice.reducer;
