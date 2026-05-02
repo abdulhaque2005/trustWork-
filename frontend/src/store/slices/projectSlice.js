@@ -62,6 +62,18 @@ export const getProjectDetails = createAsyncThunk(
   }
 );
 
+export const releaseMilestone = createAsyncThunk(
+  'projects/releaseMilestone',
+  async ({ projectId, milestoneId }, { rejectWithValue }) => {
+    try {
+      const response = await API.post(`/projects/${projectId}/milestones/${milestoneId}/release`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to release milestone');
+    }
+  }
+);
+
 const initialState = {
   projects: [],
   currentProject: null,
