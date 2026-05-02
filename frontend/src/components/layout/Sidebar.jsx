@@ -1,142 +1,79 @@
-import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../../store/slices/authSlice.js";
+import { logout } from "../../store/slices/authSlice";
 import {
-  LayoutGrid,
-  FolderKanban,
-  Wallet,
-  ShieldAlert,
-  Settings,
-  LogOut,
-  ShieldCheck,
-  Users,
-  BarChart3,
-  Plus
+  LayoutDashboard, FolderKanban, CreditCard, ShieldAlert, Settings,
+  Plus, LogOut, Users, Search, Shield, BarChart3
 } from "lucide-react";
 
 const Sidebar = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme") || "light");
-
-  useEffect(() => {
-    const handleThemeChange = () => {
-      setCurrentTheme(localStorage.getItem("theme") || "light");
-    };
-    window.addEventListener("storage", handleThemeChange);
-    // Custom event for same-tab changes
-    window.addEventListener("themeChange", handleThemeChange);
-    return () => {
-      window.removeEventListener("storage", handleThemeChange);
-      window.removeEventListener("themeChange", handleThemeChange);
-    };
-  }, []);
-
-  const rawRole = localStorage.getItem("role") || user?.role || "Client";
-  const role = rawRole === "Freelancer" ? "Freelancer" : "Client";
+  const role = (user?.role || localStorage.getItem("role") || "client").toLowerCase();
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
-  const menuItems = [
-    { name: "Dashboard", path: "/dashboard", icon: <LayoutGrid size={18} />, roles: ["Client", "Freelancer"] },
-    { name: "Projects", path: "/projects", icon: <FolderKanban size={18} />, roles: ["Client", "Freelancer"] },
-    { name: "Team Hub", path: "/team", icon: <Users size={18} />, roles: ["Client"] },
-    { name: "Payments", path: "/payments", icon: <Wallet size={18} />, roles: ["Client", "Freelancer"] },
-    { name: "Disputes", path: "/disputes", icon: <ShieldAlert size={18} />, roles: ["Client", "Freelancer"] },
-    { name: "Analytics", path: "/analytics", icon: <BarChart3 size={18} />, roles: ["Client"] },
-    { name: "Settings", path: "/settings", icon: <Settings size={18} />, roles: ["Client", "Freelancer"] },
+  const links = [
+    { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["client","freelancer","admin"] },
+    { to: "/projects", icon: FolderKanban, label: role === "freelancer" ? "Browse Projects" : "Projects", roles: ["client","freelancer","admin"] },
+    { to: "/create-project", icon: Plus, label: "New Project", roles: ["client"] },
+    { to: "/payments", icon: CreditCard, label: role === "freelancer" ? "Earnings" : "Payments", roles: ["client","freelancer","admin"] },
+    { to: "/disputes", icon: ShieldAlert, label: role === "admin" ? "Manage Disputes" : "Disputes", roles: ["client","freelancer","admin"] },
+    { to: "/team", icon: Users, label: "Team Hub", roles: ["client","freelancer","admin"] },
+    { to: "/analytics", icon: BarChart3, label: "Analytics", roles: ["client","freelancer","admin"] },
+    { to: "/settings", icon: Settings, label: "Settings", roles: ["client","freelancer","admin"] },
   ];
 
-  const filteredMenu = menuItems.filter(item => item.roles.includes(role));
+  const filteredLinks = links.filter(l => l.roles.includes(role));
 
   return (
-    <div
-      className="sidebar-container fixed left-0 top-0 h-screen w-64 flex flex-col p-6 z-50 transition-colors duration-300"
-      style={{
-        backgroundColor: "var(--sidebar-bg)",
-        borderRight: "1px solid var(--sidebar-border)",
-      }}
-    >
+    <div className="fixed left-0 top-0 bottom-0 w-64 flex flex-col z-30 sidebar-container"
+      style={{ backgroundColor: "var(--sidebar-bg)", borderRight: "1px solid var(--sidebar-border)" }}>
+
       {/* Logo */}
-      <div className="flex items-center gap-3 px-2 mb-10">
-        <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "var(--accent)", color: "#fff" }}
-        >
-          <ShieldCheck size={20} />
+      <div className="p-6 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Shield size={18} className="text-white" />
         </div>
-        <h1 className="text-lg font-bold tracking-tight" style={{ color: currentTheme === "light" ? "var(--text-main)" : "#FFFFFF" }}>
-          EscrowFlow
-        </h1>
-      </div>
-
-      {/* User Card */}
-      <div
-        className="mb-8 px-3 py-3 rounded-2xl transition-colors duration-300"
-        style={{ backgroundColor: "var(--bg-soft)", border: "1px solid var(--border-color)" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6C5CE7] to-indigo-400 text-white flex items-center justify-center text-xs font-bold shadow-md">
-            {user?.fullName?.charAt(0) || "U"}
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-bold truncate" style={{ color: "var(--text-main)" }}>
-              {user?.fullName || "User"}
-            </p>
-            <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ color: "var(--accent)" }}>
-              {role}
-            </span>
-          </div>
+        <div>
+          <h1 className="text-base font-black tracking-tight" style={{ color: "var(--text-main)" }}>EscrowFlow</h1>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{role}</p>
         </div>
       </div>
 
-      {/* Create Project CTA */}
-      {role === "Client" && (
-        <button
-          onClick={() => navigate("/create-project")}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-6 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-lg"
-          style={{ backgroundColor: "var(--accent)" }}
-        >
-          <Plus size={18} />
-          Create Project
-        </button>
-      )}
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1">
-        {filteredMenu.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.path}
-            className={({ isActive }) =>
-              `sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                isActive ? "shadow-sm active" : ""
-              }`
-            }
+      {/* Nav Links */}
+      <nav className="flex-1 px-3 space-y-1 mt-2">
+        {filteredLinks.map(link => (
+          <NavLink key={link.to} to={link.to}
+            className={({ isActive }) => `sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive ? "active" : ""}`}
             style={({ isActive }) => ({
               backgroundColor: isActive ? "var(--accent)" : "transparent",
-              color: isActive ? "#FFFFFF" : "var(--sidebar-text)",
-            })}
-          >
-            {item.icon}
-            {item.name}
+              color: isActive ? "white" : "var(--sidebar-text)",
+            })}>
+            <link.icon size={18} />
+            <span>{link.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      {/* Sign Out */}
-      <div className="mt-auto pt-6" style={{ borderTop: "1px solid var(--border-color)" }}>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 font-semibold text-sm text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-        >
-          <LogOut size={18} />
-          Sign Out
+      {/* User + Logout */}
+      <div className="p-4 border-t" style={{ borderColor: "var(--sidebar-border)" }}>
+        <div className="flex items-center gap-3 mb-3 px-2">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-black">
+            {(user?.name || "U")[0].toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold truncate" style={{ color: "var(--text-main)" }}>{user?.name || "User"}</p>
+            <p className="text-[10px] truncate" style={{ color: "var(--text-muted)" }}>{user?.email}</p>
+          </div>
+        </div>
+        <button onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:bg-red-500/10 text-red-500">
+          <LogOut size={14} /> Sign Out
         </button>
       </div>
     </div>

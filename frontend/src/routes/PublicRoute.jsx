@@ -3,8 +3,9 @@ import { useAuth } from "../hooks/useAuth.js";
 
 const PublicRoute = ({ children }) => {
   const { isLoggedIn } = useAuth();
+  const token = localStorage.getItem("token");
 
-  if (isLoggedIn) {
+  if (isLoggedIn || token) {
     return <Navigate to="/dashboard" />;
   }
 
