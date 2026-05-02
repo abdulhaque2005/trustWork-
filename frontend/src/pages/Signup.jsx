@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser } from "../store/slices/authSlice.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { Loader2, ShieldAlert, LockKeyhole } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,23 +8,42 @@ import "./Auth.css";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { registeredUsers, dispatch } = useAuth();
+  const { register, error, resetError } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", role: "Client" });
+  const [formData, setFormData] = useState({ fullName: "", email: "", password: "", confirmPassword: "", role: "client" });
 
-  const handleSignup = (e) => {
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      resetError();
+    }
+  }, [error, resetError]);
+
+  const handleSignup = async (e) => {
     e.preventDefault();
+    if (!formData.fullName || !formData.email || !formData.password) {
+      return toast.error("Please fill in all fields");
+    }
     if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
     if (formData.password !== formData.confirmPassword) return toast.error("Passwords do not match");
-    if (registeredUsers.find(u => u.email === formData.email)) return toast.error("Email already registered");
 
     setLoading(true);
-    setTimeout(() => {
-      dispatch(registerUser({ fullName: formData.fullName, email: formData.email, password: formData.password, role: formData.role }));
-      setLoading(false);
+    try {
+      await register({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role.toLowerCase()
+      }).unwrap();
+      
       toast.success("Account created! Please login.");
       navigate("/login");
-    }, 1200);
+    } catch (err) {
+      const message = typeof err === "string" ? err : err?.message || "Registration failed. Please try again.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,15 +79,15 @@ const Signup = () => {
           <div className="premium-role-selector">
             <button
               type="button"
-              onClick={() => setFormData({...formData, role: "Client"})}
-              className={`role-option ${formData.role === "Client" ? "active" : ""}`}
+              onClick={() => setFormData({...formData, role: "client"})}
+              className={`role-option ${formData.role === "client" ? "active" : ""}`}
             >
               Join as Client
             </button>
             <button
               type="button"
-              onClick={() => setFormData({...formData, role: "Freelancer"})}
-              className={`role-option ${formData.role === "Freelancer" ? "active" : ""}`}
+              onClick={() => setFormData({...formData, role: "freelancer"})}
+              className={`role-option ${formData.role === "freelancer" ? "active" : ""}`}
             >
               Join as Freelancer
             </button>
