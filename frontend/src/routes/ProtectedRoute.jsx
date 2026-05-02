@@ -3,14 +3,18 @@ import { useAuth } from "../hooks/useAuth.js";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isLoggedIn } = useAuth();
+  const token = localStorage.getItem("token");
   
-  if (!isLoggedIn) return <Navigate to="/login" />;
+  // Not logged in — no token and no Redux state
+  if (!isLoggedIn && !token) return <Navigate to="/login" />;
   
-  const rawRole = localStorage.getItem("role") || user?.role || "Client";
-  const userRole = rawRole === "Freelancer" ? "Freelancer" : "Client";
-
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/dashboard" />;
+  // Role check: get role from Redux user first, fallback to localStorage
+  if (allowedRoles) {
+    const userRole = (user?.role || localStorage.getItem("role") || "client").toLowerCase();
+    const allowed = allowedRoles.map(r => r.toLowerCase());
+    if (!allowed.includes(userRole)) {
+      return <Navigate to="/dashboard" />;
+    }
   }
   
   return children;
