@@ -1,29 +1,90 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import API from '../../services/api';
+import { fetchPublicData } from '../../services/publicData';
 
-const initialProjects = [
-  {
-    id: 'PRJ-4921',
-    name: "E-commerce Redesign",
-    client: "Fashion Hub",
-    category: "Design",
-    totalAmount: 1500,
-    status: "Active",
-    progress: 65,
-    deadline: "Oct 30, 2026",
-    milestones: [
-      { id: 'M1', title: "Wireframes", amount: 500, status: "Released", deadline: "Oct 10" },
-      { id: 'M2', title: "High-Fi Design", amount: 1000, status: "Locked", deadline: "Oct 25" },
-    ],
-    disputes: []
+// Async Thunks
+export const fetchDashboardStats = createAsyncThunk(
+  'projects/fetchStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/projects/stats');
+      return response.data.data.stats;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch stats');
+    }
   }
-];
+);
+
+export const fetchProjects = createAsyncThunk(
+  'projects/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/projects');
+      return response.data.data.projects;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch projects');
+    }
+  }
+);
+
+export const createProjectAsync = createAsyncThunk(
+  'projects/create',
+  async (projectData, { rejectWithValue }) => {
+    try {
+      const response = await API.post('/projects', projectData);
+      return response.data.data.project;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create project');
+    }
+  }
+);
+
+
+export const getProjectDetails = createAsyncThunk(
+  'projects/getDetails',
+  async (projectId, { rejectWithValue }) => {
+    try {
+      if (projectId.startsWith('pub-')) {
+        const data = await fetchPublicData();
+        const project = data.projects.find(p => p._id === projectId);
+        if (project) {
+          return {
+            project,
+            milestones: project.milestones
+          };
+        }
+      }
+      const response = await API.get(`/projects/${projectId}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project details');
+    }
+  }
+);
+
+export const releaseMilestone = createAsyncThunk(
+  'projects/releaseMilestone',
+  async ({ projectId, milestoneId }, { rejectWithValue }) => {
+    try {
+      const response = await API.post(`/projects/${projectId}/milestones/${milestoneId}/release`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to release milestone');
+    }
+  }
+);
 
 const initialState = {
-  projects: JSON.parse(localStorage.getItem('projects')) || initialProjects,
-  payments: JSON.parse(localStorage.getItem('payments')) || [],
-  activities: JSON.parse(localStorage.getItem('activities')) || [
-    { id: 1, text: "System initialized", time: "Just now", type: "system" }
-  ],
+  projects: [],
+  currentProject: null,
+  stats: {
+    totalProjects: 0,
+    activeProjects: 0,
+    escrowAmount: 0,
+    totalEarnings: 0
+  },
+  loading: false,
+  error: null,
   searchQuery: ""
 };
 
@@ -34,28 +95,54 @@ const projectSlice = createSlice({
     setSearchQuery: (state, action) => {
       state.searchQuery = action.payload;
     },
-    addProject: (state, action) => {
-      const newProject = { ...action.payload, id: `PRJ-${Math.floor(1000 + Math.random() * 9000)}`, status: "Active", progress: 0, disputes: [] };
-      state.projects.unshift(newProject);
-      state.activities.unshift({ id: Date.now(), text: `New project created: ${newProject.name}`, time: "1m ago", type: "create" });
-      localStorage.setItem('projects', JSON.stringify(state.projects));
-      localStorage.setItem('activities', JSON.stringify(state.activities));
-    },
-    releaseMilestone: (state, action) => {
-      const { projectId, milestoneId } = action.payload;
-      const project = state.projects.find(p => p.id === projectId);
-      if (project) {
-        const milestone = project.milestones.find(m => m.id === milestoneId);
-        if (milestone && milestone.status !== "Released") {
-          milestone.status = "Released";
-          state.activities.unshift({ id: Date.now(), text: `Milestone released: ${milestone.title}`, time: "Just now", type: "payment" });
-          localStorage.setItem('projects', JSON.stringify(state.projects));
-          localStorage.setItem('activities', JSON.stringify(state.activities));
-        }
-      }
+    clearProjectError: (state) => {
+      state.error = null;
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Stats
+      .addCase(fetchDashboardStats.fulfilled, (state, action) => {
+        state.stats = action.payload;
+      })
+      // Fetch Projects
+      .addCase(fetchProjects.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.loading = false;
+        state.projects = action.payload;
+      })
+      .addCase(fetchProjects.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create Project
+      .addCase(createProjectAsync.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createProjectAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.projects.unshift(action.payload);
+      })
+      .addCase(createProjectAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Get Project Details
+      .addCase(getProjectDetails.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getProjectDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentProject = action.payload;
+      })
+      .addCase(getProjectDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { addProject, releaseMilestone, setSearchQuery } = projectSlice.actions;
+export const { setSearchQuery, clearProjectError } = projectSlice.actions;
 export default projectSlice.reducer;
