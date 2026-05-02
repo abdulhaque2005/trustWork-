@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import { Loader2, ShieldAlert, LockKeyhole } from "lucide-react";
@@ -8,29 +8,33 @@ import "./Auth.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { registeredUsers, login } = useAuth();
+  const { login, error, resetError } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      const userMatch = Array.isArray(registeredUsers) 
-        ? registeredUsers.find(u => u.email === formData.email && u.password === formData.password)
-        : null;
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      resetError();
+    }
+  }, [error, resetError]);
 
-      if (userMatch) {
-        localStorage.setItem("role", userMatch.role);
-        login({ fullName: userMatch.fullName, email: userMatch.email, role: userMatch.role, plan: "Basic" });
-        setLoading(false);
-        toast.success(`Welcome back!`);
-        navigate("/dashboard");
-      } else {
-        setLoading(false);
-        toast.error("Invalid credentials");
-      }
-    }, 1200);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      return toast.error("Please fill in all fields");
+    }
+    setLoading(true);
+    try {
+      const result = await login(formData).unwrap();
+      toast.success(`Welcome back, ${result?.data?.user?.name || "User"}!`);
+      navigate("/dashboard");
+    } catch (err) {
+      const message = typeof err === "string" ? err : err?.message || "Login failed. Please check your credentials.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
